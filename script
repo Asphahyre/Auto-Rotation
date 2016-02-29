@@ -1,0 +1,36 @@
+#!/usr/bin/python3
+
+from collections import deque
+from time import sleep
+from os import system
+
+def tilt1():
+    with open('/sys/devices/platform/lis3lv02d/position') as f:
+        return int(f.read().split(",")[1])
+def tilt2():
+    with open('/sys/devices/platform/lis3lv02d/position') as f:
+        return int(f.read().split(",")[0].split("(")[1])
+
+print("Starting service...")
+
+state = "normal"
+newstate = state
+
+while True:
+    avg1 = tilt1()
+    avg2 = tilt2()
+    if state == "normal":
+        if avg1 < -800:
+            newstate = "left"
+        if avg1 > 800:
+            newstate = "right"
+    elif state == "left":
+        if avg1 > -250 and avg2 < 500:
+            newstate = "normal"
+    elif state == "right":
+        if avg1 < 250 and avg2 < 500:
+            newstate = "normal"
+    if state != newstate:
+            system("xrandr --output eDP1 --rotate " + newstate)
+    state = newstate
+    sleep(0.04)
